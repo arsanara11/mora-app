@@ -6,20 +6,35 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('atmospheres', function (Blueprint $table) {
             $table->id();
+
+            $table->foreignId('user_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
+            $table->foreignId('mood_id')
+                ->nullable()
+                ->constrained()
+                ->nullOnDelete();
+
+            $table->string('title');
+            $table->string('slug')->unique();
+            $table->text('description')->nullable();
+
+            $table->string('cover_image')->nullable();
+
+            $table->boolean('is_public')->default(true);
+
+            $table->unsignedBigInteger('views_count')->default(0);
+            $table->unsignedBigInteger('saves_count')->default(0);
+
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('atmospheres');

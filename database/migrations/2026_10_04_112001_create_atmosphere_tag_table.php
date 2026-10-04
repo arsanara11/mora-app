@@ -6,20 +6,28 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('atmosphere_tag', function (Blueprint $table) {
             $table->id();
+
+            $table->foreignId('atmosphere_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
+            $table->foreignId('tag_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
+            $table->unique([
+                'atmosphere_id',
+                'tag_id'
+            ]);
+
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('atmosphere_tag');

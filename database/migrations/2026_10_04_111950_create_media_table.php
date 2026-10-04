@@ -6,20 +6,37 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('media', function (Blueprint $table) {
             $table->id();
+
+            $table->foreignId('atmosphere_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
+            $table->enum('type', [
+                'image',
+                'audio',
+                'video',
+                'text'
+            ]);
+
+            $table->string('title')->nullable();
+            $table->text('description')->nullable();
+
+            $table->string('file_path')->nullable();
+
+            $table->text('content')->nullable();
+
+            $table->string('external_url')->nullable();
+
+            $table->unsignedInteger('sort_order')->default(0);
+
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('media');
