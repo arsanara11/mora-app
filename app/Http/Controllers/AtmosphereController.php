@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Atmosphere;
+use App\Models\User;
 
 class AtmosphereController extends Controller
 {
@@ -20,6 +21,21 @@ class AtmosphereController extends Controller
 
         $atmosphere->increment('views_count');
 
-        return view('atmosphere', compact('atmosphere'));
+        // Temporary demo user
+        // Nanti akan diganti dengan authenticated user.
+        $user = User::where('email', 'hello@mora.test')->first();
+
+        $isSaved = false;
+
+        if ($user) {
+            $isSaved = $user->savedAtmospheres()
+                ->where('atmosphere_id', $atmosphere->id)
+                ->exists();
+        }
+
+        return view('atmosphere', compact(
+            'atmosphere',
+            'isSaved'
+        ));
     }
 }

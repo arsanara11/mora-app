@@ -9,6 +9,8 @@ class HomeController extends Controller
 {
     public function index()
     {
+        $selectedMood = request('mood');
+
         $featuredAtmospheres = Atmosphere::with([
             'user.profile',
             'mood',
@@ -16,6 +18,11 @@ class HomeController extends Controller
             'media',
         ])
             ->where('is_public', true)
+            ->when($selectedMood, function ($query) use ($selectedMood) {
+                $query->whereHas('mood', function ($moodQuery) use ($selectedMood) {
+                    $moodQuery->where('slug', $selectedMood);
+                });
+            })
             ->latest()
             ->take(6)
             ->get();
@@ -24,7 +31,8 @@ class HomeController extends Controller
 
         return view('home', compact(
             'featuredAtmospheres',
-            'moods'
+            'moods',
+            'selectedMood'
         ));
     }
 }
