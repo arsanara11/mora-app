@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<head>
+
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>MORA — A place for every feeling.</title>
 
@@ -99,6 +101,28 @@
         border-color: rgba(255, 255, 255, 0.2);
         background: rgba(255, 255, 255, 0.06);
     }
+
+    .search-wrapper {
+        transition:
+            border-color 0.3s ease,
+            background 0.3s ease,
+            box-shadow 0.3s ease,
+            transform 0.3s ease;
+    }
+
+    .search-wrapper:focus-within {
+        border-color: rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.055);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+
+    .search-icon {
+        transition: color 0.3s ease;
+    }
+
+    .search-wrapper:focus-within .search-icon {
+        color: rgba(255, 255, 255, 0.7);
+    }
 </style>
 
 
@@ -110,7 +134,6 @@
 <!-- Ambient Background -->
 
 <div class="pointer-events-none fixed inset-0 overflow-hidden">
-
     <div class="mora-glow absolute inset-0"></div>
 
     <div
@@ -120,7 +143,6 @@
     <div
         class="absolute -right-32 top-[30rem] h-96 w-96 rounded-full bg-blue-500/10 blur-[140px]"
     ></div>
-
 </div>
 
 
@@ -199,6 +221,7 @@
                 class="font-display text-5xl font-normal leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-8xl"
             >
                 A place for
+
                 <span class="text-white/35">
                     every feeling.
                 </span>
@@ -226,6 +249,89 @@
                 </a>
 
             </div>
+
+
+            <!-- Search -->
+
+            <form
+                method="GET"
+                action="{{ route('home') }}"
+                class="mt-8 max-w-2xl"
+            >
+
+                @if ($selectedMood)
+                    <input
+                        type="hidden"
+                        name="mood"
+                        value="{{ $selectedMood }}"
+                    >
+                @endif
+
+                <div
+                    class="search-wrapper group flex items-center gap-4 rounded-full border border-white/10 bg-white/[0.025] px-5 py-3.5 backdrop-blur-xl"
+                >
+
+                    <svg
+                        class="search-icon h-5 w-5 shrink-0 text-white/30"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="m21 21-4.35-4.35m1.35-5.15a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z"
+                        />
+                    </svg>
+
+                    <input
+                        type="text"
+                        name="search"
+                        value="{{ $search }}"
+                        placeholder="Search an atmosphere..."
+                        autocomplete="off"
+                        class="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/25"
+                    >
+
+                    @if ($search)
+
+                        <a
+                            href="{{ $selectedMood
+                                ? route('home', ['mood' => $selectedMood]) . '#atmospheres'
+                                : route('home') . '#atmospheres' }}"
+                            class="shrink-0 text-white/30 transition hover:text-white/70"
+                            aria-label="Clear search"
+                        >
+
+                            <svg
+                                class="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M6 6l12 12M18 6 6 18"
+                                />
+                            </svg>
+
+                        </a>
+
+                    @endif
+
+                    <button
+                        type="submit"
+                        class="shrink-0 rounded-full bg-white px-5 py-2 text-xs font-medium text-black transition hover:bg-white/90"
+                    >
+                        Search
+                    </button>
+
+                </div>
+
+            </form>
 
         </div>
 
@@ -261,7 +367,7 @@
             <!-- All moods -->
 
             <a
-                href="{{ route('home') }}#moods"
+                href="{{ route('home', $search ? ['search' => $search] : []) }}#moods"
                 class="mood-pill inline-flex items-center rounded-full border px-5 py-3 text-sm transition
                     {{ empty($selectedMood)
                         ? 'border-white/25 bg-white text-black'
@@ -280,7 +386,10 @@
             @foreach ($moods as $mood)
 
                 <a
-                    href="{{ route('home', ['mood' => $mood->slug]) }}#atmospheres"
+                    href="{{ route('home', array_filter([
+                        'mood' => $mood->slug,
+                        'search' => $search,
+                    ])) }}#atmospheres"
                     class="mood-pill inline-flex items-center rounded-full border px-5 py-3 text-sm transition
                         {{ $selectedMood === $mood->slug
                             ? 'border-white/25 bg-white text-black'
@@ -310,16 +419,30 @@
         </div>
 
 
-        @if ($selectedMood)
+        @if ($selectedMood || $search)
 
-            <div class="mt-6 flex items-center gap-3 text-sm text-white/35">
+            <div class="mt-6 flex flex-wrap items-center gap-3 text-sm text-white/35">
 
                 <span class="h-1.5 w-1.5 rounded-full bg-white/50"></span>
 
-                Showing atmospheres for
-                <span class="text-white/65">
-                    {{ $moods->firstWhere('slug', $selectedMood)?->name ?? $selectedMood }}
-                </span>
+                @if ($search)
+                    Searching for
+                    <span class="text-white/65">
+                        "{{ $search }}"
+                    </span>
+                @endif
+
+                @if ($selectedMood && $search)
+                    <span class="text-white/20">
+                        in
+                    </span>
+                @endif
+
+                @if ($selectedMood)
+                    <span class="text-white/65">
+                        {{ $moods->firstWhere('slug', $selectedMood)?->name ?? $selectedMood }}
+                    </span>
+                @endif
 
             </div>
 
@@ -340,15 +463,31 @@
             <div>
 
                 <p class="text-xs uppercase tracking-[0.3em] text-white/30">
-                    Curated for you
+
+                    @if ($search)
+                        Search results
+                    @else
+                        Curated for you
+                    @endif
+
                 </p>
 
                 <h2 class="mt-3 text-3xl font-medium tracking-tight">
-                    @if ($selectedMood)
+
+                    @if ($search)
+
+                        Results for "{{ $search }}".
+
+                    @elseif ($selectedMood)
+
                         {{ $moods->firstWhere('slug', $selectedMood)?->name ?? 'Selected' }} atmospheres.
+
                     @else
+
                         Explore atmospheres.
+
                     @endif
+
                 </h2>
 
             </div>
@@ -517,16 +656,33 @@
 
                 </div>
 
-                <p class="mt-5 text-white/40">
-                    No atmospheres found for this mood yet.
-                </p>
+                @if ($search)
 
-                <a
-                    href="{{ route('home') }}#moods"
-                    class="mt-5 inline-flex rounded-full border border-white/10 px-5 py-2.5 text-sm text-white/55 transition hover:border-white/20 hover:text-white"
-                >
-                    Explore another mood
-                </a>
+                    <p class="mt-5 text-white/40">
+                        No atmospheres found for "{{ $search }}".
+                    </p>
+
+                    <a
+                        href="{{ route('home') }}#atmospheres"
+                        class="mt-5 inline-flex rounded-full border border-white/10 px-5 py-2.5 text-sm text-white/55 transition hover:border-white/20 hover:text-white"
+                    >
+                        Explore everything
+                    </a>
+
+                @else
+
+                    <p class="mt-5 text-white/40">
+                        No atmospheres found for this mood yet.
+                    </p>
+
+                    <a
+                        href="{{ route('home') }}#moods"
+                        class="mt-5 inline-flex rounded-full border border-white/10 px-5 py-2.5 text-sm text-white/55 transition hover:border-white/20 hover:text-white"
+                    >
+                        Explore another mood
+                    </a>
+
+                @endif
 
             </div>
 
@@ -565,4 +721,5 @@
 
 
 </body>
+
 </html>
