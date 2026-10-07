@@ -105,6 +105,18 @@
             transform: scale(1.05);
             box-shadow: 0 12px 35px rgba(255, 255, 255, 0.12);
         }
+
+        .tag-pill {
+            transition:
+                transform 0.3s ease,
+                border-color 0.3s ease,
+                background 0.3s ease,
+                color 0.3s ease;
+        }
+
+        .tag-pill:hover {
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 
@@ -113,6 +125,7 @@
     <!-- Ambient Background -->
 
     <div class="pointer-events-none fixed inset-0 overflow-hidden">
+
         <div class="atmosphere-bg absolute inset-0"></div>
 
         <div
@@ -122,6 +135,7 @@
         <div
             class="absolute -right-40 top-[40%] h-[500px] w-[500px] rounded-full bg-blue-500/10 blur-[160px]"
         ></div>
+
     </div>
 
 
@@ -142,6 +156,7 @@
                 href="{{ route('home') }}"
                 class="icon-button group flex items-center gap-2.5 rounded-full border border-white/10 px-5 py-2.5 text-sm text-white/60 transition hover:border-white/20 hover:text-white"
             >
+
                 <svg
                     width="16"
                     height="16"
@@ -157,6 +172,7 @@
                 </svg>
 
                 <span>Explore</span>
+
             </a>
 
         </div>
@@ -172,6 +188,7 @@
 
             <div class="grid gap-10 lg:grid-cols-[1.25fr_0.75fr] lg:items-end">
 
+
                 <!-- Visual -->
 
                 <div
@@ -185,6 +202,8 @@
                     <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
 
                     <div class="absolute bottom-7 left-7 right-7 flex items-end justify-between">
+
+                        <!-- Mood -->
 
                         <div>
 
@@ -267,15 +286,80 @@
                         Atmosphere
                     </p>
 
+
                     <h1
                         class="mt-4 font-display text-5xl font-normal leading-[1.05] tracking-tight sm:text-6xl"
                     >
                         {{ $atmosphere->title }}
                     </h1>
 
+
                     <p class="mt-6 text-base leading-8 text-white/45">
                         {{ $atmosphere->description }}
                     </p>
+
+
+                    <!-- TAGS -->
+
+                    @php
+                        $tags = $atmosphere->tags;
+                    @endphp
+
+                    @if ($tags->count() > 0)
+
+                        <div class="mt-7">
+
+                            <div class="mb-3 flex items-center gap-2">
+
+                                <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.6"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    class="text-purple-300/70"
+                                >
+                                    <path d="m20.5 13.5-7 7a2 2 0 0 1-2.8 0l-7.2-7.2a2 2 0 0 1 0-2.8l7-7a2 2 0 0 1 2.8 0l7.2 7.2a2 2 0 0 1 0 2.8Z"></path>
+                                    <circle cx="8.5" cy="8.5" r="1.3"></circle>
+                                </svg>
+
+                                <span class="text-[10px] font-medium uppercase tracking-[0.25em] text-white/35">
+                                    Tags
+                                </span>
+
+                            </div>
+
+
+                            <div class="flex flex-wrap gap-2">
+
+                                @foreach ($tags as $tag)
+
+                                    <span
+                                        class="tag-pill inline-flex items-center rounded-full border border-purple-400/25 bg-purple-400/10 px-4 py-2 text-xs font-medium text-purple-200 hover:border-purple-300/50 hover:bg-purple-400/20 hover:text-white"
+                                    >
+                                        #{{ $tag->name }}
+                                    </span>
+
+                                @endforeach
+
+                            </div>
+
+                        </div>
+
+                    @else
+
+                        <div class="mt-7">
+
+                            <span class="text-xs text-white/20">
+                                No tags
+                            </span>
+
+                        </div>
+
+                    @endif
 
 
                     <!-- Creator -->
@@ -297,7 +381,7 @@
                             @if ($atmosphere->user->profile?->username)
 
                                 <p class="mt-1 text-xs text-white/30">
-                                    @{{ $atmosphere->user->profile->username }}
+                                    {{ '@' . $atmosphere->user->profile->username }}
                                 </p>
 
                             @endif
@@ -310,6 +394,7 @@
                     <!-- Actions -->
 
                     <div class="mt-8 flex gap-3">
+
 
                         <!-- SAVE -->
 
@@ -384,27 +469,6 @@
         </section>
 
 
-        <!-- Tags -->
-
-        <section class="mx-auto max-w-7xl px-6 pb-20 lg:px-10">
-
-            <div class="flex flex-wrap gap-2">
-
-                @foreach ($atmosphere->tags as $tag)
-
-                    <span
-                        class="rounded-full border border-white/[0.08] bg-white/[0.025] px-4 py-2 text-xs text-white/40 transition hover:border-white/15 hover:bg-white/[0.04] hover:text-white/60"
-                    >
-                        #{{ $tag->name }}
-                    </span>
-
-                @endforeach
-
-            </div>
-
-        </section>
-
-
         <!-- Media -->
 
         <section class="mx-auto max-w-7xl px-6 pb-32 lg:px-10">
@@ -424,7 +488,10 @@
 
             <div class="grid gap-5 md:grid-cols-2">
 
-                @foreach ($atmosphere->media as $media)
+                @forelse ($atmosphere->media as $media)
+
+
+                    <!-- TEXT -->
 
                     @if ($media->type === 'text')
 
@@ -471,12 +538,15 @@
                                 {{ $media->title }}
                             </h3>
 
+
                             <p class="mt-5 text-sm leading-8 text-white/45">
                                 {{ $media->content }}
                             </p>
 
                         </article>
 
+
+                    <!-- AUDIO -->
 
                     @elseif ($media->type === 'audio')
 
@@ -555,6 +625,8 @@
                         </article>
 
 
+                    <!-- IMAGE -->
+
                     @elseif ($media->type === 'image')
 
                         <article class="media-card glass overflow-hidden rounded-[28px]">
@@ -578,6 +650,7 @@
                                 </svg>
 
                             </div>
+
 
                             <div class="p-6">
 
@@ -605,6 +678,7 @@
 
                                 </div>
 
+
                                 <h3 class="mt-3 text-lg font-medium">
                                     {{ $media->title }}
                                 </h3>
@@ -613,6 +687,8 @@
 
                         </article>
 
+
+                    <!-- VIDEO -->
 
                     @elseif ($media->type === 'video')
 
@@ -641,9 +717,11 @@
 
                             </div>
 
+
                             <h3 class="mt-6 text-xl font-medium">
                                 {{ $media->title }}
                             </h3>
+
 
                             <p class="mt-3 text-sm text-white/35">
                                 {{ $media->description }}
@@ -653,7 +731,17 @@
 
                     @endif
 
-                @endforeach
+                @empty
+
+                    <div class="glass col-span-full rounded-[28px] p-10 text-center">
+
+                        <p class="text-sm text-white/30">
+                            This atmosphere doesn't have any media yet.
+                        </p>
+
+                    </div>
+
+                @endforelse
 
             </div>
 
@@ -682,6 +770,7 @@
 
             </div>
 
+
             <p class="text-xs text-white/20">
                 © {{ date('Y') }} MORA
             </p>
@@ -694,7 +783,9 @@
     <!-- Share Script -->
 
     <script>
+
         function shareAtmosphere() {
+
             const shareData = {
                 title: @json($atmosphere->title . ' — MORA'),
                 text: @json($atmosphere->description),
@@ -702,23 +793,31 @@
             };
 
             if (navigator.share) {
+
                 navigator.share(shareData).catch(() => {});
+
                 return;
             }
 
+
             navigator.clipboard.writeText(window.location.href);
+
 
             const button = document.querySelector('.share-button');
             const label = button.querySelector('span');
-
             const originalText = label.textContent;
 
             label.textContent = 'Copied';
 
+
             setTimeout(() => {
+
                 label.textContent = originalText;
+
             }, 1800);
+
         }
+
     </script>
 
 </body>

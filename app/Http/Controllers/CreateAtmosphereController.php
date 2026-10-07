@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Atmosphere;
 use App\Models\Mood;
+use App\Models\Tag;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class CreateAtmosphereController extends Controller
@@ -16,9 +18,10 @@ class CreateAtmosphereController extends Controller
         return view('atmospheres.create', compact('moods'));
     }
 
-    public function store()
+    public function store(Request $request)
     {
-        $validated = request()->validate([
+
+        $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
             'mood_id' => ['required', 'exists:moods,id'],
@@ -26,9 +29,19 @@ class CreateAtmosphereController extends Controller
             'is_public' => ['nullable', 'boolean'],
         ]);
 
-        // Temporary demo user.
-        // Nanti diganti dengan auth()->user().
+        /*
+        |--------------------------------------------------------------------------
+        | Demo User
+        |--------------------------------------------------------------------------
+        */
+
         $user = User::where('email', 'hello@mora.test')->firstOrFail();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Create Atmosphere
+        |--------------------------------------------------------------------------
+        */
 
         $atmosphere = Atmosphere::create([
             'user_id' => $user->id,
@@ -36,8 +49,64 @@ class CreateAtmosphereController extends Controller
             'title' => $validated['title'],
             'slug' => Str::slug($validated['title']) . '-' . Str::lower(Str::random(5)),
             'description' => $validated['description'],
-            'is_public' => request()->boolean('is_public'),
+            'is_public' => $request->boolean('is_public'),
         ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Create & Attach Tags
+        |--------------------------------------------------------------------------
+        */
+
+        $tagInput = trim($request->input('tags', ''));
+
+        if ($tagInput !== '') {
+
+            $tagNames = collect(explode(',', $tagInput))
+                ->map(function ($tag) {
+                    return trim($tag);
+                })
+                ->filter(function ($tag) {
+                    return $tag !== '';
+                })
+                ->unique(function ($tag) {
+                    return Str::lower($tag);
+                })
+                ->values();
+
+            $tagIds = [];
+
+            foreach ($tagNames as $tagName) {
+
+                $slug = Str::slug($tagName);
+
+                if ($slug === '') {
+                    continue;
+                }
+
+                $tag = Tag::where('slug', $slug)->first();
+
+                if (!$tag) {
+                    $tag = Tag::create([
+                        'name' => $tagName,
+                        'slug' => $slug,
+                    ]);
+                }
+
+                $tagIds[] = $tag->id;
+            }
+
+            if (!empty($tagIds)) {
+                $atmosphere->tags()->sync($tagIds);
+            }
+
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Redirect
+        |--------------------------------------------------------------------------
+        */
 
         return redirect()
             ->route('atmosphere.show', $atmosphere->slug)
