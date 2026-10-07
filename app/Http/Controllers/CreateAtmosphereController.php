@@ -20,12 +20,16 @@ class CreateAtmosphereController extends Controller
 
     public function store(Request $request)
     {
-
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
             'mood_id' => ['required', 'exists:moods,id'],
             'tags' => ['nullable', 'string'],
+            'spotify_url' => [
+                'nullable',
+                'url',
+                'regex:/^https?:\/\/(open\.)?spotify\.com\/track\/[a-zA-Z0-9]+/',
+            ],
             'is_public' => ['nullable', 'boolean'],
         ]);
 
@@ -33,9 +37,14 @@ class CreateAtmosphereController extends Controller
         |--------------------------------------------------------------------------
         | Demo User
         |--------------------------------------------------------------------------
+        |
+        | Untuk sementara MORA masih menggunakan user demo.
+        | Nanti akan kita ganti dengan authenticated user.
+        |
         */
 
         $user = User::where('email', 'hello@mora.test')->firstOrFail();
+
 
         /*
         |--------------------------------------------------------------------------
@@ -52,9 +61,10 @@ class CreateAtmosphereController extends Controller
             'is_public' => $request->boolean('is_public'),
         ]);
 
+
         /*
         |--------------------------------------------------------------------------
-        | Create & Attach Tags
+        | Create Tags
         |--------------------------------------------------------------------------
         */
 
@@ -99,8 +109,28 @@ class CreateAtmosphereController extends Controller
             if (!empty($tagIds)) {
                 $atmosphere->tags()->sync($tagIds);
             }
-
         }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Create Spotify Media
+        |--------------------------------------------------------------------------
+        */
+
+        $spotifyUrl = trim($request->input('spotify_url', ''));
+
+        if ($spotifyUrl !== '') {
+
+            $atmosphere->media()->create([
+                'type' => 'audio',
+                'title' => 'Spotify Soundtrack',
+                'description' => 'The soundtrack for this atmosphere.',
+                'external_url' => $spotifyUrl,
+                'sort_order' => 1,
+            ]);
+        }
+
 
         /*
         |--------------------------------------------------------------------------

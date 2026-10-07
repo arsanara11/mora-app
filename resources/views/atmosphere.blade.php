@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
@@ -117,6 +118,11 @@
         .tag-pill:hover {
             transform: translateY(-2px);
         }
+
+        .spotify-frame {
+            overflow: hidden;
+            border-radius: 16px;
+        }
     </style>
 </head>
 
@@ -187,7 +193,6 @@
         <section class="mx-auto max-w-7xl px-6 pb-24 pt-10 lg:px-10 lg:pt-16">
 
             <div class="grid gap-10 lg:grid-cols-[1.25fr_0.75fr] lg:items-end">
-
 
                 <!-- Visual -->
 
@@ -395,7 +400,6 @@
 
                     <div class="mt-8 flex gap-3">
 
-
                         <!-- SAVE -->
 
                         <form
@@ -546,40 +550,58 @@
                         </article>
 
 
-                    <!-- AUDIO -->
+                    <!-- AUDIO / SPOTIFY -->
 
                     @elseif ($media->type === 'audio')
 
-                        <article class="media-card glass rounded-[28px] p-7">
+                        @php
+                            $spotifyUrl = $media->external_url;
+                            $spotifyTrackId = null;
+
+                            if ($spotifyUrl) {
+                                preg_match(
+                                    '/spotify\.com\/track\/([a-zA-Z0-9]+)/',
+                                    $spotifyUrl,
+                                    $spotifyMatches
+                                );
+
+                                $spotifyTrackId = $spotifyMatches[1] ?? null;
+                            }
+                        @endphp
+
+
+                        <article class="media-card glass rounded-[28px] p-7 md:col-span-2">
 
                             <div class="flex items-center justify-between">
 
                                 <div class="flex items-center gap-2.5">
 
-                                    <span class="text-white/30">
+                                    <span class="text-[#1DB954]">
 
                                         <svg
-                                            width="15"
-                                            height="15"
+                                            width="17"
+                                            height="17"
                                             viewBox="0 0 24 24"
                                             fill="none"
                                             stroke="currentColor"
-                                            stroke-width="1.5"
+                                            stroke-width="1.7"
                                             stroke-linecap="round"
                                             stroke-linejoin="round"
                                         >
-                                            <path d="M9 18V5l10-2v13"></path>
-                                            <circle cx="6" cy="18" r="3"></circle>
-                                            <circle cx="16" cy="16" r="3"></circle>
+                                            <circle cx="12" cy="12" r="9"></circle>
+                                            <path d="M8 9.5c3.5-1 7.2-.7 10 .8"></path>
+                                            <path d="M8.5 13c2.8-.7 5.6-.4 8 .7"></path>
+                                            <path d="M9 16c2-.4 4-.2 5.5.4"></path>
                                         </svg>
 
                                     </span>
 
-                                    <span class="text-xs uppercase tracking-[0.2em] text-white/25">
-                                        Sound
+                                    <span class="text-xs uppercase tracking-[0.2em] text-white/30">
+                                        Spotify
                                     </span>
 
                                 </div>
+
 
                                 <span class="text-xs text-white/20">
                                     {{ str_pad($media->sort_order, 2, '0', STR_PAD_LEFT) }}
@@ -588,39 +610,98 @@
                             </div>
 
 
-                            <div class="mt-8 flex items-center gap-5">
+                            @if ($spotifyTrackId)
 
-                                <button
-                                    type="button"
-                                    class="play-button flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white text-black"
-                                >
+                                <div class="mt-7 spotify-frame">
 
-                                    <svg
-                                        width="18"
-                                        height="18"
-                                        viewBox="0 0 24 24"
-                                        fill="currentColor"
-                                        aria-hidden="true"
-                                    >
-                                        <path d="M8.5 5.2c0-1 1.1-1.6 2-1l8.2 6.8c.8.6.8 1.8 0 2.4l-8.2 6.8c-.9.6-2 .1-2-1V5.2Z"></path>
-                                    </svg>
-
-                                </button>
-
-
-                                <div>
-
-                                    <h3 class="text-lg font-medium">
-                                        {{ $media->title }}
-                                    </h3>
-
-                                    <p class="mt-1 text-sm text-white/35">
-                                        {{ $media->content }}
-                                    </p>
+                                    <iframe
+                                        style="border-radius: 12px;"
+                                        src="https://open.spotify.com/embed/track/{{ $spotifyTrackId }}?utm_source=generator"
+                                        width="100%"
+                                        height="152"
+                                        frameborder="0"
+                                        allowfullscreen=""
+                                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                                        loading="lazy"
+                                    ></iframe>
 
                                 </div>
 
-                            </div>
+                            @elseif ($media->external_url)
+
+                                <div class="mt-7 rounded-2xl border border-white/10 bg-white/[0.025] p-5">
+
+                                    <p class="text-sm text-white/45">
+                                        This sound is available on Spotify.
+                                    </p>
+
+                                    <a
+                                        href="{{ $media->external_url }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm text-white/65 transition hover:border-white/20 hover:text-white"
+                                    >
+                                        Open Spotify
+
+                                        <svg
+                                            width="14"
+                                            height="14"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="1.7"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        >
+                                            <path d="M7 17 17 7"></path>
+                                            <path d="M9 7h8v8"></path>
+                                        </svg>
+
+                                    </a>
+
+                                </div>
+
+                            @else
+
+                                <div class="mt-7 flex items-center gap-5">
+
+                                    <button
+                                        type="button"
+                                        class="play-button flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white text-black"
+                                    >
+
+                                        <svg
+                                            width="18"
+                                            height="18"
+                                            viewBox="0 0 24 24"
+                                            fill="currentColor"
+                                            aria-hidden="true"
+                                        >
+                                            <path d="M8.5 5.2c0-1 1.1-1.6 2-1l8.2 6.8c.8.6.8 1.8 0 2.4l-8.2 6.8c-.9.6-2 .1-2-1V5.2Z"></path>
+                                        </svg>
+
+                                    </button>
+
+
+                                    <div>
+
+                                        <h3 class="text-lg font-medium">
+                                            {{ $media->title }}
+                                        </h3>
+
+                                        @if ($media->content)
+
+                                            <p class="mt-1 text-sm text-white/35">
+                                                {{ $media->content }}
+                                            </p>
+
+                                        @endif
+
+                                    </div>
+
+                                </div>
+
+                            @endif
 
                         </article>
 
